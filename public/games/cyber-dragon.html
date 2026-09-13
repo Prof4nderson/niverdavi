@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cyber Dragon - Cyberpunk Glass Edition</title>
+  <style>
+    :root {
+      --neon-cyan: #00ffcc;
+      --neon-pink: #ff007f;
+      --neon-purple: #a805ff;
+      --neon-yellow: #ffe600;
+      --neon-green: #39ff14;
+      --glass-bg: rgba(13, 14, 28, 0.55);
+      --glass-border: rgba(0, 255, 204, 0.25);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #05050d;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Fundo Animado com Grade Cyberpunk */
+    .bg-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(rgba(0, 255, 204, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 127, 0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 1;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 50px 50px; }
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(168, 5, 255, 0.15) 0%, rgba(0,0,0,0) 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: 2;
+      pointer-events: none;
+      animation: pulseGlow 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+    }
+
+    /* Container Principal */
+    #game-container {
+      position: relative;
+      width: 95vw;
+      max-width: 1200px;
+      height: 90vh;
+      max-height: 800px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      border-radius: 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow), inset 0 0 20px rgba(0, 255, 204, 0.1);
+      overflow: hidden;
+    }
+
+    /* Top HUD Glassmorphism */
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      background: rgba(5, 5, 15, 0.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 12;
+    }
+
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hud-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 2px;
+    }
+
+    .hud-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+      font-family: monospace;
+    }
+
+    .hud-value.pink { color: var(--neon-pink); text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
+    .hud-value.yellow { color: var(--neon-yellow); text-shadow: 0 0 10px rgba(255, 230, 0, 0.5); }
+
+    .combo-badge {
+      background: rgba(255, 0, 127, 0.2);
+      border: 1px solid var(--neon-pink);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--neon-pink);
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .combo-badge.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Canvas do Jogo */
+    canvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Modal / Overlays */
+    .overlay-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 15, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.4s ease;
+    }
+
+    .overlay-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .logo-title {
+      font-size: 3.2rem;
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 0 15px rgba(0, 255, 204, 0.4));
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 30px;
+      max-width: 500px;
+      line-height: 1.5;
+    }
+
+    /* Guia de Comestíveis */
+    .items-guide {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-width: 650px;
+      margin-bottom: 30px;
+    }
+
+    .guide-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .guide-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .btn-cyber {
+      background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(255, 0, 127, 0.2));
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      padding: 16px 42px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-cyber:hover {
+      transform: translateY(-3px) scale(1.03);
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 30px rgba(255, 0, 127, 0.6);
+      background: linear-gradient(135deg, rgba(0, 255, 204, 0.4), rgba(255, 0, 127, 0.4));
+    }
+
+    .btn-cyber:active {
+      transform: translateY(1px);
+    }
+
+    .controls-hint {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Mobile Controls Overlay */
+    .touch-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: none;
+      gap: 10px;
+      z-index: 15;
+    }
+
+    @media (max-width: 768px) {
+      .touch-controls { display: flex; }
+      .logo-title { font-size: 2.2rem; }
+      .hud-value { font-size: 1.2rem; }
+    }
+
+    .touch-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="ambient-glow"></div>
+
+  <div id="game-container">
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-stat">
+        <span class="hud-title">SCORE</span>
+        <span id="score" class="hud-value">0000</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-title">HIGH SCORE</span>
+        <span id="highscore" class="hud-value yellow">0000</span>
+      </div>
+      <div class="combo-badge" id="combo-badge">2X COMBO!</div>
+      <div class="hud-stat">
+        <span class="hud-title">ENERGY DRAGON</span>
+        <span id="speed-val" class="hud-value pink">100%</span>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Start / Game Over Screen -->
+    <div id="overlay" class="overlay-screen">
+      <h1 class="logo-title" id="overlay-title">CYBER DRAGON</h1>
+      <p class="subtitle" id="overlay-sub">Guie o dragão cibernético, devore núcleos de dados neon e domine a rede sem colidir!</p>
+
+      <div class="items-guide">
+        <div class="guide-card">
+          <div class="guide-icon" style="background: var(--neon-cyan); color: var(--neon-cyan);"></div>
+          <strong>Data Core</strong>
+          <span>+10 Pts | Cresce</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon" style="background: var(--neon-pink); color: var(--neon-pink);"></div>
+          <strong>Neon Gem</strong>
+          <span>+30 Pts | Raro</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon" style="background: var(--neon-yellow); color: var(--neon-yellow);"></div>
+          <strong>Overclock</strong>
+          <span>+Turbo +2x Combo</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon" style="background: var(--neon-purple); color: var(--neon-purple);"></div>
+          <strong>Plasma Orb</strong>
+          <span>+Escudo Temporal</span>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon" style="background: var(--neon-green); color: var(--neon-green);"></div>
+          <strong>Quantum Gem</strong>
+          <span>Reduz a Cauda</span>
+        </div>
+      </div>
+
+      <button class="btn-cyber" id="start-btn">INICIAR CONEXÃO</button>
+      <p class="controls-hint">Controles: Setas / WASD / Mouse ou Toque para direcionar</p>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       AUDIO SYNTHESIZER (Web Audio API - Sem Arquivos Externos)
+       ========================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playEat() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+      playPowerup() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(1200, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+      playCrash() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* ==========================================================================
+       CONFIGURAÇÕES E ESTADO DO JOGO
+       ========================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const scoreEl = document.getElementById('score');
+    const highscoreEl = document.getElementById('highscore');
+    const speedValEl = document.getElementById('speed-val');
+    const comboBadge = document.getElementById('combo-badge');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlaySub = document.getElementById('overlay-sub');
+    const startBtn = document.getElementById('start-btn');
+
+    let animationId;
+    let width, height;
+    let score = 0;
+    let highscore = localStorage.getItem('cyber_dragon_hs') || 0;
+    highscoreEl.textContent = String(highscore).padStart(4, '0');
+
+    let gameActive = false;
+    let mouseControl = true;
+    let pointerPos = { x: 0, y: 0 };
+
+    // Tipos de Comestíveis
+    const FOOD_TYPES = {
+      CORE: { color: '#00ffcc', pts: 10, radius: 10, name: 'Core' },
+      GEM: { color: '#ff007f', pts: 30, radius: 12, name: 'Gem' },
+      CHIP: { color: '#ffe600', pts: 15, radius: 11, name: 'Overclock' },
+      ORB: { color: '#a805ff', pts: 20, radius: 13, name: 'Shield' },
+      CRYSTAL: { color: '#39ff14', pts: 50, radius: 11, name: 'Quantum' }
+    };
+
+    let activeFoods = [];
+    let particles = [];
+    let floatingTexts = [];
+
+    /* ==========================================================================
+       CLASSE DRAGÃO (ESTILO TRAÇO FUSIONADO COM CYBERPUNK NEON)
+       ========================================================================== */
+    class CyberDragon {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.angle = 0;
+        this.speed = 3.8;
+        this.baseSpeed = 3.8;
+        this.turnSpeed = 0.08;
+        this.length = 18; // Quantidade de segmentos
+        this.segmentDist = 12;
+        this.body = [];
+        this.shieldActive = false;
+        this.shieldTimer = 0;
+        this.multiplier = 1;
+        this.multiplierTimer = 0;
+
+        // Inicializa corpo do dragão
+        for (let i = 0; i < this.length; i++) {
+          this.body.push({ x: x - i * this.segmentDist, y: y });
+        }
+      }
+
+      update(targetAngle) {
+        // Interpolação suave do ângulo da cabeça
+        let diff = targetAngle - this.angle;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        this.angle += diff * this.turnSpeed;
+
+        // Efeito de Overclock / Multiplicador
+        if (this.multiplierTimer > 0) {
+          this.multiplierTimer--;
+          if (this.multiplierTimer === 0) {
+            this.multiplier = 1;
+            this.speed = this.baseSpeed;
+            comboBadge.classList.remove('active');
+          }
+        }
+
+        // Escudo temporal
+        if (this.shieldTimer > 0) {
+          this.shieldTimer--;
+          if (this.shieldTimer === 0) this.shieldActive = false;
+        }
+
+        // Mover Cabeça
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.body[0] = { x: this.x, y: this.y };
+
+        // Mover Segmentos da Cauda (Física Estilo Serpente/Dragão)
+        for (let i = 1; i < this.body.length; i++) {
+          let prev = this.body[i - 1];
+          let curr = this.body[i];
+          let dx = prev.x - curr.x;
+          let dy = prev.y - curr.y;
+          let dist = Math.hypot(dx, dy);
+
+          if (dist > this.segmentDist) {
+            let angle = Math.atan2(dy, dx);
+            curr.x = prev.x - Math.cos(angle) * this.segmentDist;
+            curr.y = prev.y - Math.sin(angle) * this.segmentDist;
+          }
+        }
+
+        // Soltar partículas da cauda
+        if (Math.random() < 0.4) {
+          const tail = this.body[this.body.length - 1];
+          particles.push(new Particle(tail.x, tail.y, '#00ffcc', 1, 3, (Math.random() - 0.5) * 1));
+        }
+      }
+
+      grow(amount = 2) {
+        for (let i = 0; i < amount; i++) {
+          let last = this.body[this.body.length - 1];
+          this.body.push({ x: last.x, y: last.y });
+        }
+      }
+
+      shrink(amount = 3) {
+        if (this.body.length > 8) {
+          this.body.splice(-amount);
+        }
+      }
+
+      draw(ctx) {
+        // Desenhar Asas Cyberpunk na parte superior do corpo
+        if (this.body.length > 4) {
+          let wingPos = this.body[3];
+          ctx.save();
+          ctx.translate(wingPos.x, wingPos.y);
+          ctx.rotate(this.angle);
+
+          // Asa Esquerda
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-15, -45);
+          ctx.lineTo(10, -25);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(255, 0, 127, 0.4)';
+          ctx.strokeStyle = '#ff007f';
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = '#ff007f';
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.stroke();
+
+          // Asa Direita
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-15, 45);
+          ctx.lineTo(10, 25);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        // Desenhar Corpo (Segmentos Neons Conectados)
+        for (let i = this.body.length - 1; i >= 0; i--) {
+          let seg = this.body[i];
+          let ratio = i / this.body.length;
+          let radius = (1 - ratio * 0.6) * 12;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(seg.x, seg.y, Math.max(radius, 3), 0, Math.PI * 2);
+
+          if (i === 0) {
+            // Cabeça
+            ctx.fillStyle = '#00ffcc';
+            ctx.shadowColor = '#00ffcc';
+            ctx.shadowBlur = 18;
+          } else {
+            // Corpo em gradiente
+            let color = this.shieldActive ? '#a805ff' : (i % 2 === 0 ? '#00ffcc' : '#ff007f');
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+          }
+          ctx.fill();
+
+          // Espinhos ao longo do dorso
+          if (i > 0 && i % 2 === 0) {
+            ctx.strokeStyle = '#ffe600';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(seg.x, seg.y, radius + 3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+
+        // Desenhar Olhos Neons na Cabeça
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(4, -5, 3, 0, Math.PI * 2);
+        ctx.arc(4, 5, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Escudo de Energia
+        if (this.shieldActive) {
+          ctx.strokeStyle = '#a805ff';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#a805ff';
+          ctx.shadowBlur = 20;
+          ctx.beginPath();
+          ctx.arc(0, 0, 22, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    /* ==========================================================================
+       SISTEMA DE PARTÍCULAS E TEXTO FLUTUANTE
+       ========================================================================== */
+    class Particle {
+      constructor(x, y, color, speedScale = 1, size = 4, vx = null) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * size + 2;
+        this.vx = vx !== null ? vx : (Math.random() - 0.5) * 4 * speedScale;
+        this.vy = (Math.random() - 0.5) * 4 * speedScale;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.03 + 0.015;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(this.alpha, 0);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class FloatingText {
+      constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.alpha = 1;
+      }
+      update() {
+        this.y -= 1.2;
+        this.alpha -= 0.02;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(this.alpha, 0);
+        ctx.font = 'bold 16px monospace';
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 8;
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+      }
+    }
+
+    /* ==========================================================================
+       CLASSE DOS COMESTÍVEIS (FOOD)
+       ========================================================================== */
+    class Food {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.pulse = 0;
+      }
+
+      draw(ctx) {
+        this.pulse += 0.08;
+        let pRadius = this.type.radius + Math.sin(this.pulse) * 2;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, pRadius, 0, Math.PI * 2);
+        ctx.fillStyle = this.type.color;
+        ctx.shadowColor = this.type.color;
+        ctx.shadowBlur = 15;
+        ctx.fill();
+
+        // Anel Externo Neon
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, pRadius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    /* ==========================================================================
+       LÓGICA PRINCIPAL E LOOP DO JOGO
+       ========================================================================== */
+    let dragon;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      width = canvas.width;
+      height = canvas.height;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function spawnFood() {
+      const margin = 40;
+      const x = Math.random() * (width - margin * 2) + margin;
+      const y = Math.random() * (height - margin * 2) + margin;
+
+      // Sorteio weighted dos itens
+      const rand = Math.random();
+      let type = FOOD_TYPES.CORE;
+
+      if (rand > 0.88) type = FOOD_TYPES.CRYSTAL;
+      else if (rand > 0.75) type = FOOD_TYPES.ORB;
+      else if (rand > 0.60) type = FOOD_TYPES.CHIP;
+      else if (rand > 0.40) type = FOOD_TYPES.GEM;
+
+      activeFoods.push(new Food(x, y, type));
+    }
+
+    function initGame() {
+      resizeCanvas();
+      sound.init();
+      score = 0;
+      scoreEl.textContent = '0000';
+      speedValEl.textContent = '100%';
+      activeFoods = [];
+      particles = [];
+      floatingTexts = [];
+
+      dragon = new CyberDragon(width / 2, height / 2);
+      pointerPos = { x: width / 2 + 50, y: height / 2 };
+
+      // Spawna comida inicial
+      for (let i = 0; i < 4; i++) spawnFood();
+
+      gameActive = true;
+      overlay.classList.add('hidden');
+
+      if (animationId) cancelAnimationFrame(animationId);
+      gameLoop();
+    }
+
+    function triggerExplosion(x, y, color) {
+      for (let i = 0; i < 15; i++) {
+        particles.push(new Particle(x, y, color, 1.8, 5));
+      }
+    }
+
+    function gameOver() {
+      gameActive = false;
+      sound.playCrash();
+
+      if (score > highscore) {
+        highscore = score;
+        localStorage.setItem('cyber_dragon_hs', highscore);
+        highscoreEl.textContent = String(highscore).padStart(4, '0');
+      }
+
+      overlayTitle.textContent = "SISTEMA CORROMPIDO";
+      overlaySub.textContent = `Sua conexão caiu! Pontuação Final: ${score} pontos.`;
+      startBtn.textContent = "RECONECTAR";
+      overlay.classList.remove('hidden');
+    }
+
+    /* ==========================================================================
+       INPUT CONTROLS (MOUSE, TOUCH & KEYBOARD)
+       ========================================================================== */
+    window.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      pointerPos.x = e.clientX - rect.left;
+      pointerPos.y = e.clientY - rect.top;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        pointerPos.x = e.touches[0].clientX - rect.left;
+        pointerPos.y = e.touches[0].clientY - rect.top;
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!gameActive) return;
+      const turnAmount = 0.35;
+      if (e.key === 'ArrowLeft' || e.key === 'a') dragon.angle -= turnAmount;
+      if (e.key === 'ArrowRight' || e.key === 'd') dragon.angle += turnAmount;
+    });
+
+    startBtn.addEventListener('click', initGame);
+
+    /* ==========================================================================
+       GAME LOOP
+       ========================================================================== */
+    function gameLoop() {
+      if (!gameActive) return;
+
+      // Limpar Canvas
+      ctx.clearRect(0, 0, width, height);
+
+      // Calcular Ângulo do Dragão para o Ponteiro
+      const targetAngle = Math.atan2(pointerPos.y - dragon.y, pointerPos.x - dragon.x);
+      dragon.update(targetAngle);
+
+      // Colisão com as Paredes
+      if (!dragon.shieldActive) {
+        if (dragon.x < 0 || dragon.x > width || dragon.y < 0 || dragon.y > height) {
+          gameOver();
+          return;
+        }
+      } else {
+        // Bounce nas paredes com escudo
+        if (dragon.x < 0) dragon.x = width;
+        if (dragon.x > width) dragon.x = 0;
+        if (dragon.y < 0) dragon.y = height;
+        if (dragon.y > height) dragon.y = 0;
+      }
+
+      // Auto-colisão com o próprio corpo
+      for (let i = 6; i < dragon.body.length; i++) {
+        let seg = dragon.body[i];
+        let dist = Math.hypot(dragon.x - seg.x, dragon.y - seg.y);
+        if (dist < 10 && !dragon.shieldActive) {
+          gameOver();
+          return;
+        }
+      }
+
+      // Atualizar e Desenhar Comidas
+      for (let i = activeFoods.length - 1; i >= 0; i--) {
+        let food = activeFoods[i];
+        food.draw(ctx);
+
+        // Checar Colisão Cabeça x Comida
+        let dist = Math.hypot(dragon.x - food.x, dragon.y - food.y);
+        if (dist < food.type.radius + 12) {
+          // Efeitos de acordo com o comestível
+          let gainedPts = food.type.pts * dragon.multiplier;
+          score += gainedPts;
+          scoreEl.textContent = String(score).padStart(4, '0');
+
+          triggerExplosion(food.x, food.y, food.type.color);
+          floatingTexts.push(new FloatingText(food.x, food.y, `+${gainedPts}`, food.type.color));
+
+          if (food.type === FOOD_TYPES.CORE) {
+            sound.playEat();
+            dragon.grow(2);
+          } else if (food.type === FOOD_TYPES.GEM) {
+            sound.playEat();
+            dragon.grow(3);
+          } else if (food.type === FOOD_TYPES.CHIP) {
+            sound.playPowerup();
+            dragon.multiplier = 2;
+            dragon.multiplierTimer = 300; // ~5 segundos
+            dragon.speed = dragon.baseSpeed * 1.35;
+            comboBadge.classList.add('active');
+          } else if (food.type === FOOD_TYPES.ORB) {
+            sound.playPowerup();
+            dragon.shieldActive = true;
+            dragon.shieldTimer = 360; // Escudo
+          } else if (food.type === FOOD_TYPES.CRYSTAL) {
+            sound.playEat();
+            dragon.shrink(4);
+          }
+
+          // Respawn da Comida
+          activeFoods.splice(i, 1);
+          spawnFood();
+        }
+      }
+
+      // Manter quantidade constante de alimentos na tela
+      if (activeFoods.length < 4) spawnFood();
+
+      // Desenhar Dragão
+      dragon.draw(ctx);
+
+      // Partículas
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw(ctx);
+        if (particles[i].alpha <= 0) particles.splice(i, 1);
+      }
+
+      // Textos Flutuantes
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        floatingTexts[i].update();
+        floatingTexts[i].draw(ctx);
+        if (floatingTexts[i].alpha <= 0) floatingTexts.splice(i, 1);
+      }
+
+      // Atualizar Indicador de Energia / Tamanho
+      speedValEl.textContent = `${dragon.body.length * 5}%`;
+
+      animationId = requestAnimationFrame(gameLoop);
+    }
+  </script>
+</body>
+</html>

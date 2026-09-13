@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: meu_projeto_app
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    # Se precisar de um banco de dados, adicione o serviço abaixo e descomente
+    # depends_on:
+    #   - db
+
+  # Exemplo de Banco de Dados (PostgreSQL) - Opcional
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: meu_projeto_db
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: root
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: meubanco
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:
