@@ -6,7 +6,7 @@ services:
     container_name: davi
     restart: always
     ports:
-      - "3003:5173"
+      - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules
