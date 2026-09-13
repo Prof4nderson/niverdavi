@@ -18,4 +18,5 @@ COPY . .
 EXPOSE 5173
 
 # Comando para iniciar a aplicação
-CMD ["npm", "run", "dev"]
+# Comando para iniciar a aplicação abrindo para todas as interfaces
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
