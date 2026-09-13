@@ -6,7 +6,7 @@ services:
     container_name: meu_projeto_app
     restart: always
     ports:
-      - "3000:3000"
+      - "3003:3000"
     volumes:
       - .:/app
       - /app/node_modules
