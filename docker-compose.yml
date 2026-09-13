@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: meu_projeto_app
+    container_name: davi
     restart: always
     ports:
       - "3003:3000"
