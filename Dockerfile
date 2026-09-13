@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Expõe a porta que a aplicação roda (ex: 3000, 8080, etc.)
-EXPOSE 3000
+EXPOSE 5173
 
 # Comando para iniciar a aplicação
 CMD ["npm", "run", "dev"]
