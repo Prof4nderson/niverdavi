@@ -67,6 +67,7 @@ function PhotoCarousel({ onOpen }: { onOpen: (index: number) => void }) {
   }, [reduced]);
 
   const current = daviPhotos[active];
+  if (!current) return null;
 
   return (
     <div className="photo-carousel" role="region" aria-label="Carrossel de fotos do Davi">
@@ -132,15 +133,21 @@ export default function BirthdayApp() {
 
   const reveal = { initial: reduced ? false : { opacity: 0, y: 36 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.15 }, transition: { duration: 0.65 } };
 
-  const share = async () => {
+  const share = async (): Promise<void> => {
     const data = { title: "Davi 9 anos", text: "Você está convocado para o aniversário do Davi! Dia 30 de setembro, às 19h. Venha com sua blusa do Brasil! 🇧🇷", url: window.location.href };
-    if (navigator.share) await navigator.share(data).catch(() => undefined);
-    else window.open(`https://wa.me/?text=${encodeURIComponent(`${data.text} ${data.url}`)}`, "_blank", "noopener");
+    if (navigator.share) {
+      await navigator.share(data).catch(() => undefined);
+      return;
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${data.text} ${data.url}`)}`, "_blank", "noopener");
   };
 
   const saveMessage = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!author.trim() || !message.trim()) return toast.error("Escreva seu nome e um recado.");
+    if (!author.trim() || !message.trim()) {
+      toast.error("Escreva seu nome e um recado.");
+      return;
+    }
     const next = [{ name: author.trim(), text: message.trim() }, ...messages].slice(0, 24);
     setMessages(next);
     window.localStorage.setItem("davi-birthday-messages", JSON.stringify(next));
@@ -192,7 +199,7 @@ export default function BirthdayApp() {
 
       <motion.section id="jogos" className="games-section" {...reveal}>
         <div className="section-heading"><div><p className="section-kicker">Arena do Davi</p><h2>Quatro jogos.<br />Uma missão.</h2></div><Gamepad2 /></div>
-        <div className="games-grid">{games.map((item, index) => <motion.article key={item.path} className={`game-card ${item.tone}`} whileHover={reduced ? undefined : { y: -8, rotate: index % 2 ? 1 : -1 }}><span className="game-number">0{index + 1}</span><span className="game-emoji">{item.emoji}</span><h3>{item.title}</h3><p>{item.subtitle}</p><Button type="button" onClick={() => setGame(item)}>Jogar agora <ChevronRight /></Button></motion.article>)}</div>
+        <div className="games-grid">{games.map((item, index) => <motion.article key={item.path} className={`game-card ${item.tone}`} {...(!reduced ? { whileHover: { y: -8, rotate: index % 2 ? 1 : -1 } } : {})}><span className="game-number">0{index + 1}</span><span className="game-emoji">{item.emoji}</span><h3>{item.title}</h3><p>{item.subtitle}</p><Button type="button" onClick={() => setGame(item)}>Jogar agora <ChevronRight /></Button></motion.article>)}</div>
       </motion.section>
 
       <motion.section id="fotos" className="photos-section" {...reveal}>
@@ -208,9 +215,9 @@ export default function BirthdayApp() {
 
       <footer><strong>DAVI 9</strong><p>30 de setembro · 19h · Petisco da Praça</p><Button type="button" onClick={share}><Share2 /> Espalhe a convocação</Button></footer>
 
-      <AnimatePresence>{rsvpOpen && <motion.div className="party-modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRsvpOpen(false)}><motion.div className="party-modal" initial={{ y: 70, scale: .94 }} animate={{ y: 0, scale: 1 }} exit={{ y: 70, opacity: 0 }} onClick={(event) => event.stopPropagation()}><Button variant="ghost" size="icon" className="modal-close" onClick={() => setRsvpOpen(false)} aria-label="Fechar"><X /></Button>{confirmed ? <div className="confirmed"><span><Check /></span><p className="section-kicker">Presença confirmada</p><h2>Nos vemos na festa!</h2><p>{guestName}, sua torcida está convocada para 30 de setembro, às 19h.</p><Button onClick={share}><Share2 /> Compartilhar convite</Button></div> : <form onSubmit={(event) => { event.preventDefault(); if (!guestName.trim()) return toast.error("Digite seu nome."); setConfirmed(true); window.localStorage.setItem("davi-rsvp", JSON.stringify({ name: guestName, people })); }}><p className="section-kicker">Confirmação</p><h2>Você vem torcer com o Davi?</h2><label>Seu nome<input value={guestName} onChange={(event) => setGuestName(event.target.value)} placeholder="Nome do convidado" required /></label><label>Quantas pessoas?<select value={people} onChange={(event) => setPeople(event.target.value)}>{[1,2,3,4,5,6].map(value => <option key={value} value={value}>{value} {value === 1 ? "pessoa" : "pessoas"}</option>)}</select></label><Button type="submit" className="party-cta"><Check /> Confirmar agora</Button></form>}</motion.div></motion.div>}
+      <AnimatePresence>{rsvpOpen && <motion.div className="party-modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRsvpOpen(false)}><motion.div className="party-modal" initial={{ y: 70, scale: .94 }} animate={{ y: 0, scale: 1 }} exit={{ y: 70, opacity: 0 }} onClick={(event) => event.stopPropagation()}><Button variant="ghost" size="icon" className="modal-close" onClick={() => setRsvpOpen(false)} aria-label="Fechar"><X /></Button>{confirmed ? <div className="confirmed"><span><Check /></span><p className="section-kicker">Presença confirmada</p><h2>Nos vemos na festa!</h2><p>{guestName}, sua torcida está convocada para 30 de setembro, às 19h.</p><Button onClick={share}><Share2 /> Compartilhar convite</Button></div> : <form onSubmit={(event) => { event.preventDefault(); if (!guestName.trim()) { toast.error("Digite seu nome."); return; } setConfirmed(true); window.localStorage.setItem("davi-rsvp", JSON.stringify({ name: guestName, people })); }}><p className="section-kicker">Confirmação</p><h2>Você vem torcer com o Davi?</h2><label>Seu nome<input value={guestName} onChange={(event) => setGuestName(event.target.value)} placeholder="Nome do convidado" required /></label><label>Quantas pessoas?<select value={people} onChange={(event) => setPeople(event.target.value)}>{[1,2,3,4,5,6].map(value => <option key={value} value={value}>{value} {value === 1 ? "pessoa" : "pessoas"}</option>)}</select></label><Button type="submit" className="party-cta"><Check /> Confirmar agora</Button></form>}</motion.div></motion.div>}
       {game && <motion.div className="game-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><div className="game-modal-top"><Button variant="ghost" onClick={() => setGame(null)}><X /> Fechar</Button><strong>{game.title}</strong><span>Vire o celular se precisar</span></div><iframe src={game.path} title={`Jogo ${game.title}`} allow="autoplay; fullscreen" /></motion.div>}
-      {photo !== null && <motion.div className="photo-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPhoto(null)}><Button size="icon" onClick={() => setPhoto(null)} aria-label="Fechar foto"><X /></Button><Button size="icon" onClick={(event) => { event.stopPropagation(); setPhoto((photo - 1 + daviPhotos.length) % daviPhotos.length); }} aria-label="Foto anterior"><ChevronLeft /></Button><img src={daviPhotos[photo].src} alt={daviPhotos[photo].alt} onClick={(event) => event.stopPropagation()} /><Button size="icon" onClick={(event) => { event.stopPropagation(); setPhoto((photo + 1) % daviPhotos.length); }} aria-label="Próxima foto"><ChevronRight /></Button></motion.div>}
+      {photo !== null && daviPhotos[photo] && <motion.div className="photo-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPhoto(null)}><Button size="icon" onClick={() => setPhoto(null)} aria-label="Fechar foto"><X /></Button><Button size="icon" onClick={(event) => { event.stopPropagation(); setPhoto((photo - 1 + daviPhotos.length) % daviPhotos.length); }} aria-label="Foto anterior"><ChevronLeft /></Button><img src={daviPhotos[photo].src} alt={daviPhotos[photo].alt} onClick={(event) => event.stopPropagation()} /><Button size="icon" onClick={(event) => { event.stopPropagation(); setPhoto((photo + 1) % daviPhotos.length); }} aria-label="Próxima foto"><ChevronRight /></Button></motion.div>}
       </AnimatePresence>
     </main>
   );

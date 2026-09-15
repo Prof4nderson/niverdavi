@@ -1,7 +1,8 @@
 import { Music2, Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import birthdaySong from "@/assets/audio/nove-anos-de-poder.mp3";
+import birthdaySongAsset from "@/assets/audio/nove-anos-de-poder.mp3.asset.json";
+import dancingDog from "@/assets/dancing-dog.png";
 
 export function BirthdayMusic() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -24,7 +25,11 @@ export function BirthdayMusic() {
     audio.volume = 0.72;
     void start();
 
-    const resumeAfterBrowserUnlock = () => void start();
+    const resumeAfterBrowserUnlock = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest(".music-button")) return;
+      void start();
+    };
     window.addEventListener("pointerdown", resumeAfterBrowserUnlock, { once: true });
     window.addEventListener("keydown", resumeAfterBrowserUnlock, { once: true });
     return () => {
@@ -42,10 +47,10 @@ export function BirthdayMusic() {
   };
 
   return (
-    <>
+    <div className={`music-companion ${playing ? "is-playing" : "is-paused"}`}>
       <audio
         ref={audioRef}
-        src={birthdaySong}
+        src={birthdaySongAsset.url}
         autoPlay
         loop
         playsInline
@@ -53,11 +58,21 @@ export function BirthdayMusic() {
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
       />
-      <Button className="music-button" type="button" onClick={toggle} aria-label={playing ? "Pausar música" : "Tocar música de aniversário"}>
+      <div className="dog-guide" aria-hidden="true">
+        {!playing && <span className="sound-bubble">Ligue o som aqui</span>}
+        <img className="dancing-dog" src={dancingDog} alt="" />
+      </div>
+      <Button
+        className="music-button"
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? "Pausar música" : "Tocar música de aniversário"}
+        aria-pressed={playing}
+      >
         {playing ? <Pause /> : <Play />}
         <Music2 />
         <span>{playing ? "Pausar música" : "Tocar música"}</span>
       </Button>
-    </>
+    </div>
   );
 }
