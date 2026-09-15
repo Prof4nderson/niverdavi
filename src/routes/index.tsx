@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import BirthdayApp from "@/components/davi/BirthdayApp";
+import { DeveloperBadge } from "@/components/DeveloperBadge"; // 1. Importe o badge aqui
 import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/")({
@@ -18,9 +19,15 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <>
-      <BirthdayApp />
+    <div className="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100">
+      <main className="flex-1">
+        <BirthdayApp />
+      </main>
+      
+      {/* 2. Adicione o seu componente do badge fixo no rodapé */}
+      <DeveloperBadge />
+
       <Toaster richColors position="top-center" />
-    </>
+    </div>
   );
 }
