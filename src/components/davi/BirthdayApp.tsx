@@ -213,7 +213,14 @@ export default function BirthdayApp() {
         {messages.length > 0 && <div className="message-wall">{messages.map((item, index) => <blockquote key={`${item.name}-${index}`}><p>“{item.text}”</p><cite>— {item.name}</cite></blockquote>)}</div>}
       </motion.section>
 
-      <footer><strong>DAVI 9</strong><p>30 de setembro · 19h · Petisco da Praça</p><Button type="button" onClick={share}><Share2 /> Espalhe a convocação</Button></footer>
+      <footer>
+  <strong>DAVI 9</strong>
+  <p>30 de setembro · 19h · Petisco da Praça</p>
+  <Button type="button" onClick={share}><Share2 /> Espalhe a convocação</Button>
+  <div className="cyber-badge-footer" style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.8 }}>
+    Desenvolvido por <a href="https://seu-site.com" target="_blank" rel="noopener noreferrer" style={{ color: "cyan", textDecoration: "underline" }}>Prof. Anderson</a> • Powered by Gemini
+  </div>
+</footer>
 
       <AnimatePresence>{rsvpOpen && <motion.div className="party-modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setRsvpOpen(false)}><motion.div className="party-modal" initial={{ y: 70, scale: .94 }} animate={{ y: 0, scale: 1 }} exit={{ y: 70, opacity: 0 }} onClick={(event) => event.stopPropagation()}><Button variant="ghost" size="icon" className="modal-close" onClick={() => setRsvpOpen(false)} aria-label="Fechar"><X /></Button>{confirmed ? <div className="confirmed"><span><Check /></span><p className="section-kicker">Presença confirmada</p><h2>Nos vemos na festa!</h2><p>{guestName}, sua torcida está convocada para 30 de setembro, às 19h.</p><Button onClick={share}><Share2 /> Compartilhar convite</Button></div> : <form onSubmit={(event) => { event.preventDefault(); if (!guestName.trim()) { toast.error("Digite seu nome."); return; } setConfirmed(true); window.localStorage.setItem("davi-rsvp", JSON.stringify({ name: guestName, people })); }}><p className="section-kicker">Confirmação</p><h2>Você vem torcer com o Davi?</h2><label>Seu nome<input value={guestName} onChange={(event) => setGuestName(event.target.value)} placeholder="Nome do convidado" required /></label><label>Quantas pessoas?<select value={people} onChange={(event) => setPeople(event.target.value)}>{[1,2,3,4,5,6].map(value => <option key={value} value={value}>{value} {value === 1 ? "pessoa" : "pessoas"}</option>)}</select></label><Button type="submit" className="party-cta"><Check /> Confirmar agora</Button></form>}</motion.div></motion.div>}
       {game && <motion.div className="game-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><div className="game-modal-top"><Button variant="ghost" onClick={() => setGame(null)}><X /> Fechar</Button><strong>{game.title}</strong><span>Vire o celular se precisar</span></div><iframe src={game.path} title={`Jogo ${game.title}`} allow="autoplay; fullscreen" /></motion.div>}
