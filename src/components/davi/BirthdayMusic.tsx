@@ -2,7 +2,7 @@ import { Music2, Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import birthdaySongAsset from "../../assets/audio/nove-anos-de-poder.mp3.asset.json";
-import dancingDog from "../../assets/dancing-dog.png";
+import dancingDogAsset from "../../assets/dancing-dog.png.asset.json";
 
 export function BirthdayMusic() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -60,7 +60,7 @@ export function BirthdayMusic() {
       />
       <div className="dog-guide" aria-hidden="true">
         {!playing && <span className="sound-bubble">Ligue o som aqui</span>}
-        <img className="dancing-dog" src={dancingDog} alt="" />
+        <img className="dancing-dog" src={dancingDogAsset.url} alt="" />
       </div>
       <Button
         className="music-button"

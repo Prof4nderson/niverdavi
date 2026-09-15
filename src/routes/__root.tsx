@@ -11,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { DeveloperBadge } from "@/components/DeveloperBadge"; // 1. Importe o badge aqui
 
 function NotFoundComponent() {
   return (
@@ -107,9 +106,6 @@ function RootShell({ children }: { children: ReactNode }) {
         <div className="flex-1 flex flex-col">
           {children}
         </div>
-        
-        {/* 2. O badge fixo agora aparece automaticamente no rodapé de todas as telas */}
-        <DeveloperBadge />
 
         <Scripts />
       </body>
