@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>❄️ Igloo do Ártico · Bailey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+        body {
+            overflow: hidden;
+            background: #01040e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 1000px;
+            max-width: 100vw;
+            height: 750px;
+            max-height: 100vh;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 70px rgba(0, 200, 255, 0.35);
+            border-radius: 32px;
+            overflow: hidden;
+            border: 1.5px solid rgba(0, 220, 255, 0.5);
+            background: #030b1f;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ---- GLASS UI TOP ---- */
+        .ui-top-bar {
+            position: absolute;
+            top: 16px;
+            left: 18px;
+            right: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            pointer-events: none;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .glass-card {
+            background: rgba(8, 28, 58, 0.45);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
+            border: 1px solid rgba(120, 220, 255, 0.4);
+            border-radius: 24px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            pointer-events: auto;
+        }
+
+        .avatar-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .avatar-glow {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #00d4ff, #0033aa);
+            border: 2.5px solid #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 24px rgba(0, 180, 255, 0.8);
+            transition: 0.3s;
+        }
+
+        .stats-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #e6f7ff;
+            text-shadow: 0 0 12px rgba(0, 200, 255, 0.5);
+            letter-spacing: 0.3px;
+        }
+
+        .igloo-progress-card {
+            flex-direction: column;
+            padding: 8px 24px;
+            min-width: 200px;
+        }
+        .igloo-title {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #7fd8ff;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .igloo-count {
+            font-size: 18px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.7);
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 15, 40, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00d4ff, #9d00ff, #00ffcc);
+            box-shadow: 0 0 20px #00d4ff;
+            transition: width 0.25s ease;
+        }
+
+        .score-card {
+            text-align: right;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .score-val {
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(180deg, #fff, #b0ecff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 180, 255, 0.5);
+        }
+        .combo-badge {
+            font-size: 11px;
+            font-weight: 800;
+            color: #ffdb7c;
+            letter-spacing: 1px;
+            text-shadow: 0 0 12px #ffb703;
+        }
+
+        /* ---- PATH TRACKER (LADO DIREITO) ---- */
+        .path-tracker {
+            position: absolute;
+            right: 16px;
+            top: 120px;
+            bottom: 120px;
+            width: 34px;
+            background: rgba(6, 20, 50, 0.5);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 200, 255, 0.35);
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            z-index: 15;
+            box-shadow: inset 0 0 20px rgba(0, 150, 255, 0.2);
+        }
+        .tracker-line {
+            position: absolute;
+            top: 28px;
+            bottom: 28px;
+            width: 3px;
+            background: linear-gradient(180deg, #00d4ff, #7b2ffc);
+            z-index: 1;
+            border-radius: 10px;
+        }
+        .tracker-node {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #0b2a4a;
+            border: 2px solid #3fcbff;
+            z-index: 2;
+            box-shadow: 0 0 12px rgba(0, 200, 255, 0.5);
+        }
+        .tracker-player {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffe066, #ff8c00);
+            border: 2.5px solid #fff;
+            box-shadow: 0 0 30px #ffb703, 0 0 60px #ffb703;
+            z-index: 3;
+            left: 4px;
+            transition: bottom 0.1s linear;
+        }
+
+        /* ---- TOUCH CONTROLS ---- */
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .control-btn-group {
+            display: flex;
+            gap: 14px;
+            pointer-events: auto;
+        }
+        .btn-touch {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(8, 28, 58, 0.6);
+            backdrop-filter: blur(14px);
+            border: 2px solid rgba(0, 200, 255, 0.5);
+            color: #fff;
+            font-size: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            transition: 0.15s;
+            cursor: pointer;
+        }
+        .btn-touch:active {
+            background: rgba(0, 180, 255, 0.4);
+            transform: scale(0.9);
+            border-color: #fff;
+        }
+        .btn-dash {
+            width: 72px;
+            height: 72px;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 200, 255, 0.6), rgba(80, 0, 255, 0.7));
+            border: 2px solid #00eeff;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .btn-dash span {
+            font-size: 22px;
+        }
+        .btn-jump {
+            width: 76px;
+            height: 76px;
+            background: rgba(0, 200, 255, 0.25);
+            border-color: #00ffcc;
+            font-size: 32px;
+        }
+
+        .controls-hint-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(4, 14, 36, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 6px 22px;
+            font-size: 11px;
+            color: #90d8ff;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        /* ---- OVERLAYS ---- */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 8, 22, 0.88);
+            backdrop-filter: blur(24px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 30px;
+            text-align: center;
+            gap: 24px;
+        }
+        .overlay h1 {
+            font-size: 46px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff, #80e0ff, #b388ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 60px rgba(0, 180, 255, 0.5);
+            letter-spacing: 2px;
+        }
+        .overlay p {
+            color: #b0dfff;
+            max-width: 500px;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .btn-action {
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #00d4ff, #6a00ff);
+            border: 2px solid #ffffff;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 800;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 10px 40px rgba(0, 150, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .btn-action:hover {
+            transform: translateY(-4px) scale(1.04);
+            box-shadow: 0 16px 50px rgba(0, 200, 255, 0.7);
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 700px) {
+            .ui-top-bar {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+            .glass-card {
+                padding: 6px 12px;
+                gap: 8px;
+                border-radius: 16px;
+            }
+            .avatar-glow {
+                width: 36px;
+                height: 36px;
+            }
+            .stats-group {
+                font-size: 11px;
+            }
+            .igloo-progress-card {
+                min-width: 120px;
+                padding: 6px 14px;
+            }
+            .igloo-count {
+                font-size: 14px;
+            }
+            .score-val {
+                font-size: 16px;
+            }
+            .combo-badge {
+                font-size: 9px;
+            }
+            .btn-touch {
+                width: 52px;
+                height: 52px;
+                font-size: 22px;
+            }
+            .btn-dash {
+                width: 60px;
+                height: 60px;
+                font-size: 10px;
+            }
+            .btn-jump {
+                width: 62px;
+                height: 62px;
+            }
+            .path-tracker {
+                right: 8px;
+                width: 26px;
+                top: 100px;
+                bottom: 100px;
+            }
+            .tracker-player {
+                width: 20px;
+                height: 20px;
+                left: 3px;
+            }
+            .controls-hint-bar {
+                font-size: 9px;
+                padding: 4px 14px;
+                bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+
+        <!-- TOP HUD GLASS -->
+        <div class="ui-top-bar">
+            <div class="glass-card avatar-box">
+                <div class="avatar-glow">
+                    <svg width="34" height="34" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="42" fill="#4a2512"/>
+                        <circle cx="50" cy="50" r="36" fill="#f8fafc"/>
+                        <circle cx="50" cy="46" r="24" fill="#fed7aa"/>
+                        <path d="M 30 38 Q 50 20 70 38 Q 50 30 30 38 Z" fill="#271810"/>
+                        <circle cx="42" cy="45" r="3.8" fill="#1e293b"/>
+                        <circle cx="58" cy="45" r="3.8" fill="#1e293b"/>
+                        <circle cx="43" cy="44" r="1.4" fill="#fff"/>
+                        <circle cx="59" cy="44" r="1.4" fill="#fff"/>
+                        <path d="M 44 54 Q 50 61 56 54" stroke="#1e293b" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="stats-group">
+                    <div class="stat-item"><span style="color:#ff4d6d">❤️</span> <span id="livesVal">3</span></div>
+                    <div class="stat-item"><span style="color:#00d4ff">💎</span> <span id="gemsVal">0</span></div>
+                    <div class="stat-item"><span style="color:#ffb703">🪙</span> <span id="coinsVal">0</span></div>
+                </div>
+            </div>
+
+            <div class="glass-card igloo-progress-card">
+                <div class="igloo-title">❄️ Igloo</div>
+                <div class="igloo-count"><span id="matsVal">0</span> / 25</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="iglooBar"></div>
+                </div>
+            </div>
+
+            <div class="glass-card score-card">
+                <div style="font-size: 10px; color: #7fd8ff; letter-spacing: 1.5px; font-weight: 800;">PONTOS</div>
+                <div class="score-val" id="scoreVal">0</div>
+                <div class="combo-badge" id="comboVal">⚡ x1.0</div>
+            </div>
+        </div>
+
+        <!-- TRACKER -->
+        <div class="path-tracker">
+            <div class="tracker-line"></div>
+            <div style="z-index:2; font-size:12px;">🏁</div>
+            <div class="tracker-node" style="top:25%"></div>
+            <div class="tracker-node" style="top:50%"></div>
+            <div class="tracker-node" style="top:75%"></div>
+            <div class="tracker-player" id="trackerIcon"></div>
+            <div style="z-index:2; font-size:11px;">🏠</div>
+        </div>
+
+        <!-- CONTROLES TOUCH -->
+        <div class="touch-controls">
+            <div class="control-btn-group">
+                <div class="btn-touch" id="btnLeft">◀</div>
+                <div class="btn-touch" id="btnRight">▶</div>
+            </div>
+            <div class="control-btn-group">
+                <div class="btn-touch btn-dash" id="btnDash">
+                    <span>⚡</span> DASH
+                </div>
+                <div class="btn-touch btn-jump" id="btnJump">▲</div>
+            </div>
+        </div>
+
+        <div class="controls-hint-bar">
+            ◀ ▶ mover &nbsp;·&nbsp; ▲ pular &nbsp;·&nbsp; ⚡ dash (ar)
+        </div>
+
+        <!-- OVERLAY INÍCIO -->
+        <div id="startOverlay" class="overlay">
+            <h1>❄️ IGLOO DO ÁRTICO</h1>
+            <p>Ajude Bailey a escalar as plataformas de gelo, coletar cristais e escapar dos predadores!</p>
+            <button class="btn-action" onclick="startGame()">🚀 INICIAR</button>
+        </div>
+
+        <!-- OVERLAY GAME OVER -->
+        <div id="gameOverOverlay" class="overlay hidden">
+            <h1 id="gameOverTitle">💥 FIM</h1>
+            <p id="gameOverSub">Bailey caiu na água gelada...</p>
+            <div style="font-size:24px; font-weight:800; color:#00ffcc; margin:8px 0;" id="finalScoreText">0</div>
+            <button class="btn-action" onclick="startGame()">🔄 RECOMEÇAR</button>
+        </div>
+
+        <canvas id="gameCanvas" width="1000" height="750"></canvas>
+    </div>
+
+    <script>
+        // ======================== SETUP ========================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const WORLD = { width: 1000, height: 2600, waterY: 2520 };
+        let isRunning = false;
+        let score = 0, gems = 0, coins = 0, lives = 3, materials = 0;
+        const totalMaterialsNeeded = 25;
+        let combo = 1.0;
+
+        // Partículas de neve + brilho
+        const snowflakes = [];
+        for (let i = 0; i < 100; i++) {
+            snowflakes.push({
+                x: Math.random() * WORLD.width,
+                y: Math.random() * WORLD.height,
+                r: Math.random() * 3 + 1.2,
+                speed: Math.random() * 1.6 + 0.6,
+                drift: Math.random() * 0.8 - 0.4,
+                opacity: Math.random() * 0.6 + 0.4
+            });
+        }
+
+        // Câmera com easing
+        const camera = { y: WORLD.height - canvas.height, targetY: WORLD.height - canvas.height };
+
+        // Teclado + Touch
+        const keys = {};
+        let touchLeft = false, touchRight = false;
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
+        });
+        window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+        const bindTouch = (id, onStart, onEnd) => {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', e => { e.preventDefault(); onStart(); });
+            el.addEventListener('touchend', e => { e.preventDefault(); onEnd(); });
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('mouseup', onEnd);
+        };
+        bindTouch('btnLeft', () => touchLeft = true, () => touchLeft = false);
+        bindTouch('btnRight', () => touchRight = true, () => touchRight = false);
+        bindTouch('btnJump', () => { keys['KeyW'] = true; }, () => { keys['KeyW'] = false; });
+        bindTouch('btnDash', () => triggerDash(), () => {});
+
+        // ======================== PLAYER ========================
+        const player = {
+            x: 500, y: 2400, w: 48, h: 56,
+            vx: 0, vy: 0,
+            speed: 1.3,
+            maxVx: 8,
+            friction: 0.84,
+            jumpForce: -16.2,
+            grounded: false,
+            canDash: true,
+            isDashing: false,
+            dashTimer: 0,
+            facingRight: true,
+
+            update() {
+                // Entrada
+                if (keys['ArrowLeft'] || keys['KeyA'] || touchLeft) {
+                    if (this.vx > -this.maxVx) this.vx -= this.speed;
+                    this.facingRight = false;
+                } else if (keys['ArrowRight'] || keys['KeyD'] || touchRight) {
+                    if (this.vx < this.maxVx) this.vx += this.speed;
+                    this.facingRight = true;
+                } else {
+                    this.vx *= this.friction;
+                }
+
+                // Dash
+                if (this.isDashing) {
+                    this.dashTimer--;
+                    this.vy = 0;
+                    this.vx = this.facingRight ? 18 : -18;
+                    if (this.dashTimer <= 0) this.isDashing = false;
+                } else {
+                    this.vy += (this.vy > 0 ? 1.0 : 0.65);
+                }
+
+                // Pulo
+                if ((keys['Space'] || keys['ArrowUp'] || keys['KeyW']) && this.grounded) {
+                    this.vy = this.jumpForce;
+                    this.grounded = false;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.grounded) this.canDash = true;
+
+                // Limites
+                if (this.x < 12) { this.x = 12; this.vx = 0; }
+                if (this.x + this.w > WORLD.width - 12) { this.x = WORLD.width - 12 - this.w;
+                    this.vx = 0; }
+            },
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+                if (!this.facingRight) ctx.scale(-1, 1);
+
+                // Rastro Dash
+                if (this.isDashing) {
+                    ctx.shadowBlur = 50;
+                    ctx.shadowColor = '#00ccff';
+                    ctx.fillStyle = 'rgba(0, 220, 255, 0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(-28, 0, 30, 18, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Corpo (parka)
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(0,200,255,0.2)';
+                ctx.fillStyle = '#6b2f1a';
+                ctx.beginPath();
+                ctx.roundRect(-this.w / 2 + 4, -this.h / 2 + 14, this.w - 8, this.h - 18, [14]);
+                ctx.fill();
+
+                // Capuz
+                ctx.fillStyle = '#f0f9ff';
+                ctx.beginPath();
+                ctx.arc(0, -8, 24, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rosto
+                ctx.fillStyle = '#fbcfe8';
+                ctx.beginPath();
+                ctx.arc(2, -6, 16, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Cabelo
+                ctx.fillStyle = '#2d1500';
+                ctx.beginPath();
+                ctx.arc(2, -14, 15, Math.PI, Math.PI * 2);
+                ctx.fill();
+
+                // Olhos
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(7, -7, 3.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(8.5, -8, 1.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Bochechas
+                ctx.fillStyle = 'rgba(244, 114, 182, 0.5)';
+                ctx.beginPath();
+                ctx.arc(8, -2, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Botas
+                ctx.fillStyle = '#3b1a08';
+                ctx.fillRect(-14, this.h / 2 - 10, 12, 10);
+                ctx.fillRect(2, this.h / 2 - 10, 12, 10);
+
+                ctx.restore();
+            }
+        };
+
+        function triggerDash() {
+            if (player.canDash && !player.grounded && !player.isDashing) {
+                player.isDashing = true;
+                player.canDash = false;
+                player.dashTimer = 12;
+            }
+        }
+
+        // ======================== NÍVEL ========================
+        let platforms = [], items = [], enemies = [];
+
+        function generateLevel() {
+            platforms = [];
+            items = [];
+            enemies = [];
+
+            // Base
+            platforms.push({ x: 0, y: 2480, w: 1000, h: 60, type: 'ice' });
+
+            const rows = 24;
+            for (let i = 0; i < rows; i++) {
+                let py = 2350 - (i * 95);
+                let numPlats = 2 + Math.floor(Math.random() * 2);
+                for (let j = 0; j < numPlats; j++) {
+                    let pw = 130 + Math.random() * 70;
+                    let px = (j * 380) + Math.random() * 160;
+                    let type = (i % 5 === 0) ? 'conveyor' : 'ice';
+                    platforms.push({ x: px, y: py, w: pw, h: 28, type: type, dir: (i % 2 === 0 ? 1 : -1), speed: 1.3 });
+
+                    if (Math.random() > 0.3) {
+                        items.push({
+                            x: px + pw / 2 - 12,
+                            y: py - 38,
+                            w: 24,
+                            h: 28,
+                            type: Math.random() > 0.4 ? 'gem' : 'coin',
+                            collected: false,
+                            bob: Math.random() * 6
+                        });
+                    }
+                }
+
+                if (i > 2 && i % 3 === 0) {
+                    let enemyTypes = ['bear', 'wolf', 'owl'];
+                    let selectedType = enemyTypes[i % 3];
+                    enemies.push({
+                        x: Math.random() * (WORLD.width - 130),
+                        y: py - 44,
+                        w: selectedType === 'bear' ? 68 : selectedType === 'wolf' ? 56 : 46,
+                        h: selectedType === 'bear' ? 46 : selectedType === 'wolf' ? 38 : 36,
+                        type: selectedType,
+                        vx: (selectedType === 'owl' ? 2.8 : 1.8) * (Math.random() > 0.5 ? 1 : -1)
+                    });
+                }
+            }
+        }
+
+        // ======================== DESENHAR INIMIGOS ========================
+        function drawEnemy(en) {
+            ctx.save();
+            ctx.translate(en.x + en.w / 2, en.y + en.h / 2);
+            if (en.vx < 0) ctx.scale(-1, 1);
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = 'rgba(0,200,255,0.3)';
+
+            if (en.type === 'bear') {
+                ctx.fillStyle = '#f1f5f9';
+                ctx.beginPath();
+                ctx.ellipse(-4, 3, 30, 18, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.arc(20, -4, 14, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(24, -2, 3, 0, Math.PI * 2);
+                ctx.arc(18, -6, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (en.type === 'wolf') {
+                ctx.fillStyle = '#475569';
+                ctx.beginPath();
+                ctx.ellipse(0, 3, 24, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#334155';
+                ctx.beginPath();
+                ctx.arc(18, -3, 11, 0, Math.PI * 2);
+                ctx.moveTo(14, -12);
+                ctx.lineTo(18, -22);
+                ctx.lineTo(22, -12);
+                ctx.fill();
+            } else if (en.type === 'owl') {
+                ctx.fillStyle = '#f1f5f9';
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#cbd5e1';
+                ctx.beginPath();
+                ctx.ellipse(-16, -2, 16, 7, 0.5, 0, Math.PI * 2);
+                ctx.ellipse(16, -2, 16, 7, -0.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath();
+                ctx.arc(-5, -1, 5, 0, Math.PI * 2);
+                ctx.arc(5, -1, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(-5, -1, 2.5, 0, Math.PI * 2);
+                ctx.arc(5, -1, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // ======================== FUNDO ========================
+        function drawBackground() {
+            // Céu gradiente
+            let gradSky = ctx.createLinearGradient(0, camera.y, 0, camera.y + canvas.height);
+            gradSky.addColorStop(0, '#010517');
+            gradSky.addColorStop(0.3, '#0a254a');
+            gradSky.addColorStop(1, '#0e3f7a');
+            ctx.fillStyle = gradSky;
+            ctx.fillRect(0, camera.y, canvas.width, canvas.height);
+
+            // Aurora
+            let time = Date.now() * 0.0012;
+            let auroraGrad = ctx.createLinearGradient(0, camera.y + 60, canvas.width, camera.y + 360);
+            auroraGrad.addColorStop(0, 'rgba(0, 255, 220, 0.25)');
+            auroraGrad.addColorStop(0.4, 'rgba(120, 50, 255, 0.25)');
+            auroraGrad.addColorStop(1, 'rgba(0, 200, 255, 0.0)');
+            ctx.fillStyle = auroraGrad;
+            ctx.beginPath();
+            ctx.moveTo(0, camera.y + 150);
+            for (let x = 0; x <= canvas.width; x += 30) {
+                let y = camera.y + 140 + Math.sin(x * 0.007 + time) * 55 + Math.cos(x * 0.013 + time * 0.7) * 30;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(canvas.width, camera.y + 500);
+            ctx.lineTo(0, camera.y + 500);
+            ctx.closePath();
+            ctx.fill();
+
+            // Montanhas
+            ctx.fillStyle = '#071833';
+            ctx.beginPath();
+            ctx.moveTo(0, camera.y + canvas.height);
+            ctx.lineTo(0, camera.y + 520);
+            ctx.lineTo(180, camera.y + 380);
+            ctx.lineTo(400, camera.y + 490);
+            ctx.lineTo(660, camera.y + 330);
+            ctx.lineTo(880, camera.y + 460);
+            ctx.lineTo(1000, camera.y + 370);
+            ctx.lineTo(1000, camera.y + canvas.height);
+            ctx.fill();
+
+            // Neve
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            snowflakes.forEach(s => {
+                s.y += s.speed;
+                s.x += s.drift;
+                if (s.y > WORLD.height) s.y = 0;
+                if (s.x > WORLD.width) s.x = 0;
+                if (s.x < 0) s.x = WORLD.width;
+                ctx.globalAlpha = s.opacity;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // ======================== LOOP PRINCIPAL ========================
+        function gameLoop() {
+            if (!isRunning) return;
+            player.update();
+            camera.targetY = player.y - canvas.height * 0.55;
+            camera.targetY = Math.min(Math.max(camera.targetY, 0), WORLD.height - canvas.height);
+            camera.y += (camera.targetY - camera.y) * 0.1;
+
+            if (player.y > WORLD.waterY) takeDamage();
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(0, -Math.floor(camera.y));
+
+            drawBackground();
+
+            // Igloo topo
+            ctx.save();
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = '#00bbff';
+            ctx.fillStyle = 'rgba(230, 248, 255, 0.95)';
+            ctx.beginPath();
+            ctx.arc(500, 110, 90, Math.PI, 0, false);
+            ctx.fill();
+            ctx.fillStyle = '#031024';
+            ctx.beginPath();
+            ctx.arc(500, 110, 32, Math.PI, 0, false);
+            ctx.fill();
+            ctx.restore();
+
+            // Plataformas
+            player.grounded = false;
+            platforms.forEach(p => {
+                if (p.type === 'conveyor') {
+                    p.x += p.dir * p.speed;
+                    if (p.x < 20 || p.x + p.w > WORLD.width - 20) p.dir *= -1;
+                }
+
+                ctx.save();
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = 'rgba(0,200,255,0.3)';
+                let grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                grad.addColorStop(0, '#e6f7ff');
+                grad.addColorStop(0.3, '#5bc0ff');
+                grad.addColorStop(1, '#0284c7');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(p.x, p.y, p.w, p.h, [10]);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                // Estalactites
+                ctx.fillStyle = '#bae6fd';
+                for (let ix = p.x + 14; ix < p.x + p.w - 12; ix += 24) {
+                    ctx.beginPath();
+                    ctx.moveTo(ix - 6, p.y + p.h);
+                    ctx.lineTo(ix + 6, p.y + p.h);
+                    ctx.lineTo(ix, p.y + p.h + 16);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // Colisão
+                if (player.vy >= 0 &&
+                    player.x + player.w > p.x && player.x < p.x + p.w &&
+                    player.y + player.h >= p.y && player.y + player.h <= p.y + 14) {
+                    player.grounded = true;
+                    player.vy = 0;
+                    player.y = p.y - player.h;
+                    if (p.type === 'conveyor') player.x += p.dir * p.speed;
+                }
+            });
+
+            // Coletáveis com animação
+            const now = Date.now() * 0.003;
+            items.forEach(it => {
+                if (it.collected) return;
+                ctx.save();
+                ctx.translate(it.x + it.w / 2, it.y + it.h / 2 + Math.sin(now + it.bob) * 4);
+                if (it.type === 'gem') {
+                    ctx.shadowBlur = 30;
+                    ctx.shadowColor = '#00ddff';
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -16);
+                    ctx.lineTo(12, 0);
+                    ctx.lineTo(0, 16);
+                    ctx.lineTo(-12, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.beginPath();
+                    ctx.arc(2, -4, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.shadowBlur = 28;
+                    ctx.shadowColor = '#ffb703';
+                    ctx.fillStyle = '#ffb703';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffdd77';
+                    ctx.beginPath();
+                    ctx.arc(-2, -2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                if (player.x < it.x + it.w && player.x + player.w > it.x &&
+                    player.y < it.y + it.h && player.y + player.h > it.y) {
+                    it.collected = true;
+                    if (it.type === 'gem') {
+                        gems++;
+                        materials = Math.min(totalMaterialsNeeded, materials + 1);
+                        score += 150 * combo;
+                    } else {
+                        coins += 10;
+                        score += 50 * combo;
+                    }
+                    updateHUD();
+                }
+            });
+
+            // Inimigos
+            enemies.forEach(en => {
+                en.x += en.vx;
+                if (en.x < 30 || en.x + en.w > WORLD.width - 30) en.vx *= -1;
+                drawEnemy(en);
+
+                if (player.x < en.x + en.w && player.x + player.w > en.x &&
+                    player.y < en.y + en.h && player.y + player.h > en.y) {
+                    takeDamage();
+                }
+            });
+
+            player.draw();
+
+            // Vitória
+            if (materials >= totalMaterialsNeeded && player.y <= 170 && Math.abs(player.x - 500) < 90) {
+                winGame();
+            }
+
+            ctx.restore();
+
+            // Tracker
+            let progress = 1 - (player.y / WORLD.height);
+            document.getElementById('trackerIcon').style.bottom = `${Math.max(5, Math.min(92, progress * 100))}%`;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ======================== DANO / HUD ========================
+        function takeDamage() {
+            lives--;
+            updateHUD();
+            if (lives <= 0) gameOver(false);
+            else {
+                player.x = 500;
+                player.y = camera.y + 200;
+                player.vx = 0;
+                player.vy = 0;
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('livesVal').textContent = lives;
+            document.getElementById('gemsVal').textContent = gems;
+            document.getElementById('coinsVal').textContent = coins;
+            document.getElementById('matsVal').textContent = materials;
+            document.getElementById('scoreVal').textContent = Math.floor(score).toLocaleString();
+            document.getElementById('iglooBar').style.width = `${(materials / totalMaterialsNeeded) * 100}%`;
+            combo = 1 + (gems * 0.04);
+            document.getElementById('comboVal').textContent = `⚡ x${combo.toFixed(1)}`;
+        }
+
+        // ======================== CONTROLE DE JOGO ========================
+        function startGame() {
+            document.getElementById('startOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            lives = 3;
+            score = 0;
+            gems = 0;
+            coins = 0;
+            materials = 0;
+            player.x = 500;
+            player.y = 2400;
+            player.vx = 0;
+            player.vy = 0;
+            generateLevel();
+            updateHUD();
+            isRunning = true;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver(win) {
+            isRunning = false;
+            const over = document.getElementById('gameOverOverlay');
+            document.getElementById('gameOverTitle').textContent = win ? '🎉 VITÓRIA! IGLOO COMPLETO!' : '💀 FIM DE JOGO';
+            document.getElementById('gameOverSub').textContent = win ? 'Bailey construiu o iglu no topo!' : 'Bailey caiu ou foi capturado...';
+            document.getElementById('finalScoreText').textContent = `🏆 ${Math.floor(score)} pontos`;
+            over.classList.remove('hidden');
+        }
+
+        function winGame() {
+            score += 3000;
+            gameOver(true);
+        }
+
+        // Extensão roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
+                let r = typeof radii === 'number' ? radii : (radii || 0);
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>
