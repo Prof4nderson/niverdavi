@@ -5,9 +5,9 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { BirthdayMusic } from "./BirthdayMusic";
-import { daviPhotos } from "@/lib/daviPhotos";
+import { daviPhotos } from "../../lib/daviPhotos";
 
 type Game = { title: string; subtitle: string; emoji: string; path: string; tone: string };
 const games: Game[] = [

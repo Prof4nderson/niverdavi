@@ -1,8 +1,8 @@
 import { Music2, Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import birthdaySongAsset from "@/assets/audio/nove-anos-de-poder.mp3.asset.json";
-import dancingDog from "@/assets/dancing-dog.png";
+import { Button } from "../ui/button";
+import birthdaySongAsset from "../../assets/audio/nove-anos-de-poder.mp3.asset.json";
+import dancingDog from "../../assets/dancing-dog.png";
 
 export function BirthdayMusic() {
   const audioRef = useRef<HTMLAudioElement>(null);
