@@ -4,4 +4,12 @@ services:
     container_name: davi
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5173:80"
+      - "127.0.0.1:5173:5173"
+    environment:
+      ADMIN_PASSWORD: "davi9anos"
+      DATA_DIR: "/data"
+    volumes:
+      - davi-dados:/data
+
+volumes:
+  davi-dados:

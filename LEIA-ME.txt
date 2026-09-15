@@ -1,0 +1,36 @@
+Convite do Davi — pacote para o seu servidor (Docker)
+=====================================================
+
+O que vem aqui
+- site/           → o convite pronto (fotos, música, jogos)
+- server.mjs      → o programa que mostra o site e guarda os cadastros e recados
+- Dockerfile e docker-compose.yml → como o container é montado
+
+Como publicar
+1) Copie esta pasta para o servidor, por exemplo em /opt/davi
+2) Abra o arquivo docker-compose.yml e troque "davi9anos" pela senha
+   que você quer usar no painel de administração
+3) No servidor, dentro da pasta, rode:
+
+   docker compose up -d --build
+
+O site passa a responder em 127.0.0.1:5173, exatamente como antes,
+então a configuração do nginx que você já tem continua valendo.
+
+Atualizar depois
+   docker compose up -d --build
+
+Painel de administração
+   https://davi.professor-anderson.com/admin
+   Entre com a senha definida no docker-compose.yml.
+   Lá você vê todos os convidados (com WhatsApp e e-mail), aprova ou
+   recusa os recados e pode baixar a lista em planilha.
+
+Onde ficam os dados
+   Em um volume do Docker chamado "davi-dados", no arquivo davi-data.json.
+   Os cadastros e recados continuam salvos mesmo se o container for
+   recriado ou atualizado.
+
+Cópia de segurança
+   docker run --rm -v davi-dados:/data -v "$PWD":/backup alpine \
+     cp /data/davi-data.json /backup/davi-data.json
